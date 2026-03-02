@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Spotify Preview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial; background:#0f172a; color:#fff; margin:0; }
+.container { max-width:600px; margin:80px auto; padding:30px; background:#1e293b; border-radius:12px; }
+input { width:100%; padding:12px; border-radius:6px; border:none; }
+button { margin-top:10px; padding:10px 20px; background:#22c55e; border:none; border-radius:6px; }
+.error { color:#ef4444; margin-top:10px; }
+.debug { margin-top:30px; font-size:12px; background:#111827; padding:10px; border-radius:6px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Spotify Preview</h2>
+
+<form method="post" action="/search" novalidate>
+<input type="text" name="url" placeholder="Cole o link da música do Spotify">
+<button type="submit">Buscar</button>
+</form>
+
+{% if error %}
+<div class="error">{{ error }}</div>
+{% endif %}
+
+{% if data %}
+<hr>
+<h3>{{ data.name }}</h3>
+<p>{{ data.artists }} — {{ data.album }}</p>
+{% if data.cover %}
+<img src="{{ data.cover }}" width="200">
+{% endif %}
+{% if data.preview %}
+<br>
+<audio controls src="{{ data.preview }}"></audio>
+<br>
+<a href="/download?url={{ data.preview }}">Baixar Preview</a>
+{% endif %}
+{% endif %}
+
+{% if debug %}
+<div class="debug">
+<strong>DEBUG</strong><br>
+RAW_URL: {{ debug.raw_url }}<br>
+FINAL_URL: {{ debug.final_url }}<br>
+TRACK_ID: {{ debug.track_id }}<br>
+STATUS: {{ debug.spotify_status }}<br>
+ERROR: {{ debug.error }}
+</div>
+{% endif %}
+
+</div>
+</body>
+</html>
