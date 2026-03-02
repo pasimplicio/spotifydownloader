@@ -1,36 +1,38 @@
-import base64
 import httpx
-from spotifydownloader.core.config import settings
 
 
-class SpotifyService:
+async def download_preview_audio(preview_url: str) -> bytes:
+    """
+    Download do preview de áudio do Spotify.
 
-    TOKEN_URL = "https://accounts.spotify.com/api/token"
-    TRACK_URL = "https://api.spotify.com/v1/tracks/{}"
+    Args:
+        preview_url: URL do preview (geralmente de scdn.co)
 
-    async def get_access_token(self) -> str:
-        auth = base64.b64encode(
-            f"{settings.SPOTIFY_CLIENT_ID}:{settings.SPOTIFY_CLIENT_SECRET}".encode()
-        ).decode()
+    Returns:
+        Bytes do arquivo de áudio
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                self.TOKEN_URL,
-                headers={"Authorization": f"Basic {auth}"},
-                data={"grant_type": "client_credentials"},
-            )
+    Raises:
+        ValueError: Se a URL for inválida
+        Exception: Se o download falhar
+    """
+    if not preview_url or not preview_url.startswith(("http://", "https://")):
+        raise ValueError("URL de preview inválida")
 
-        response.raise_for_status()
-        return response.json()["access_token"]
+    async with httpx.AsyncClient(
+            timeout=30,
+            follow_redirects=True,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
+    ) as client:
+        try:
+            response = await client.get(preview_url)
+            response.raise_for_status()
+        except httpx.TimeoutException:
+            raise Exception("Timeout ao baixar o preview")
+        except httpx.HTTPStatusError as e:
+            raise Exception(f"Erro HTTP {e.response.status_code} ao baixar preview")
+        except Exception as e:
+            raise Exception(f"Erro no download: {str(e)}")
 
-    async def get_track(self, track_id: str) -> dict:
-        token = await self.get_access_token()
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                self.TRACK_URL.format(track_id),
-                headers={"Authorization": f"Bearer {token}"},
-            )
-
-        response.raise_for_status()
-        return response.json()
+    return response.content

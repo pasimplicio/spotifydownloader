@@ -1,58 +1,417 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Spotify Preview</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { font-family: Arial; background:#0f172a; color:#fff; margin:0; }
-.container { max-width:600px; margin:80px auto; padding:30px; background:#1e293b; border-radius:12px; }
-input { width:100%; padding:12px; border-radius:6px; border:none; }
-button { margin-top:10px; padding:10px 20px; background:#22c55e; border:none; border-radius:6px; }
-.error { color:#ef4444; margin-top:10px; }
-.debug { margin-top:30px; font-size:12px; background:#111827; padding:10px; border-radius:6px; }
-</style>
+    <meta charset="UTF-8">
+    <title>Spotify Preview Downloader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 30px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Cabeçalho com link para download completo */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #334155;
+        }
+
+        .header h2 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .download-complete-link {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.3);
+        }
+
+        .download-complete-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.4);
+        }
+
+        .download-complete-link .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 2px solid #334155;
+            background: #1e293b;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #22c55e;
+            background: #2d3b4f;
+        }
+
+        input::placeholder {
+            color: #64748b;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px #22c55e;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid #ef4444;
+            color: #ef4444;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #0f172a;
+            border-radius: 16px;
+            border: 1px solid #334155;
+        }
+
+        .result h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .result p {
+            color: #94a3b8;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .album-cover {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 20px 30px -10px #000;
+        }
+
+        audio {
+            width: 100%;
+            margin: 20px 0;
+            border-radius: 30px;
+        }
+
+        .download-link {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .download-link:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .no-preview {
+            background: rgba(245, 158, 11, 0.2);
+            border-left: 4px solid #f59e0b;
+            color: #f59e0b;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .debug {
+            margin-top: 30px;
+            padding: 15px;
+            background: #0f172a;
+            border-radius: 12px;
+            border: 1px solid #475569;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: #94a3b8;
+            overflow-x: auto;
+        }
+
+        .debug strong {
+            color: #fbbf24;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid #334155;
+            margin: 30px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #22c55e;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .tip {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            border-radius: 30px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .tip strong {
+            color: #22c55e;
+        }
+
+        .features {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .feature-badge {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .feature-badge.preview {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .feature-badge.complete {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Cabeçalho com link para Download Completo -->
+        <div class="header">
+            <h2>🎵 Spotify Preview</h2>
+            <a href="/download-completo" class="download-complete-link">
+                ⬇️ Download Completo
+                <span class="badge">NOVO</span>
+            </a>
+        </div>
 
-<div class="container">
-<h2>Spotify Preview</h2>
+        <!-- Formulário de busca -->
+        <form method="post" action="/search" novalidate>
+            <div class="input-group">
+                <input
+                    type="text"
+                    name="url"
+                    placeholder="Cole o link da música do Spotify"
+                    value="{{ debug.raw_url if debug else '' }}"
+                    required
+                >
+                <button type="submit">Buscar Preview</button>
+            </div>
+        </form>
 
-<form method="post" action="/search" novalidate>
-<input type="text" name="url" placeholder="Cole o link da música do Spotify">
-<button type="submit">Buscar</button>
-</form>
+        <!-- Dica rápida -->
+        <div class="tip">
+            💡 <strong>Dica:</strong> Para músicas completas, use o
+            <a href="/download-completo" style="color: #8b5cf6; text-decoration: none; font-weight: 600;">Download Completo</a>
+        </div>
 
-{% if error %}
-<div class="error">{{ error }}</div>
-{% endif %}
+        <!-- Badges de funcionalidades -->
+        <div class="features">
+            <span class="feature-badge preview">🎧 Preview 30s</span>
+            <span class="feature-badge complete">⬇️ Download Completo</span>
+        </div>
 
-{% if data %}
-<hr>
-<h3>{{ data.name }}</h3>
-<p>{{ data.artists }} — {{ data.album }}</p>
-{% if data.cover %}
-<img src="{{ data.cover }}" width="200">
-{% endif %}
-{% if data.preview %}
-<br>
-<audio controls src="{{ data.preview }}"></audio>
-<br>
-<a href="/download?url={{ data.preview }}">Baixar Preview</a>
-{% endif %}
-{% endif %}
+        <!-- Mensagem de erro -->
+        {% if error %}
+        <div class="error">
+            <strong>❌ Erro:</strong> {{ error }}
+        </div>
+        {% endif %}
 
-{% if debug %}
-<div class="debug">
-<strong>DEBUG</strong><br>
-RAW_URL: {{ debug.raw_url }}<br>
-FINAL_URL: {{ debug.final_url }}<br>
-TRACK_ID: {{ debug.track_id }}<br>
-STATUS: {{ debug.spotify_status }}<br>
-ERROR: {{ debug.error }}
-</div>
-{% endif %}
+        <!-- Resultado da busca -->
+        {% if data %}
+        <hr>
+        <div class="result">
+            <h3>{{ data.name }}</h3>
+            <p>{{ data.artists }} • {{ data.album }}</p>
 
-</div>
+            {% if data.cover %}
+            <img src="{{ data.cover }}" alt="Capa do álbum" class="album-cover">
+            {% endif %}
+
+            {% if data.preview %}
+            <audio controls src="{{ data.preview }}"></audio>
+            <br>
+            <a href="/download?url={{ data.preview }}" class="download-link" download>
+                ⬇️ Baixar Preview (MP3)
+            </a>
+            {% else %}
+            <div class="no-preview">
+                ⚠️ Esta música não possui preview disponível na API do Spotify
+                <br><br>
+                <small>👉 Use o <a href="/download-completo" style="color: #f59e0b; font-weight: 600;">Download Completo</a> para baixar a música inteira!</small>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Informações de debug -->
+        {% if debug %}
+        <div class="debug">
+            <strong>🔧 DEBUG INFO</strong>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px;">
+                <span>URL original:</span>
+                <span style="color: #a5f3fc; word-break: break-all;">{{ debug.raw_url or 'vazio' }}</span>
+
+                <span>URL processada:</span>
+                <span style="color: #a5f3fc; word-break: break-all;">{{ debug.final_url or 'vazio' }}</span>
+
+                <span>Track ID:</span>
+                <span style="color: #a5f3fc; font-family: monospace;">{{ debug.track_id or 'não extraído' }}</span>
+
+                <span>Status Spotify:</span>
+                <span style="color: {% if debug.spotify_status == 'ok' %}#4ade80{% elif debug.spotify_status == 'erro' %}#f87171{% else %}#94a3b8{% endif %};">
+                    {{ debug.spotify_status }}
+                </span>
+
+                {% if debug.error %}
+                <span>Erro:</span>
+                <span style="color: #f87171;">{{ debug.error }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Rodapé -->
+        <div class="footer">
+            <p>Desenvolvido com ❤️ usando FastAPI</p>
+            <p>
+                <a href="https://developer.spotify.com" target="_blank">Spotify API</a>
+                •
+                <a href="/download-completo" style="color: #8b5cf6;">Download Completo</a>
+            </p>
+        </div>
+    </div>
 </body>
 </html>
